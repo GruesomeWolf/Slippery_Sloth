@@ -25,16 +25,16 @@
 #include <linux/input.h>
 #include <linux/workqueue.h>
 #include <linux/freezer.h>
-#include <linux/akm8963.h>
+#include <linux/akm8963_nst.h>
 #include <linux/export.h>
 #include <linux/module.h>
 
 #define AKM8963_DEBUG_IF	0
 #define AKM8963_DEBUG_DATA	0
 
-#define D(x...) printk(KERN_DEBUG "[COMP][AKM8963] " x)
-#define I(x...) printk(KERN_INFO "[COMP][AKM8963] " x)
-#define E(x...) printk(KERN_ERR "[COMP][AKM8963] " x)
+#define D(x...) printk(KERN_DEBUG "[COMP][AKM8963_NST] " x)
+#define I(x...) printk(KERN_INFO "[COMP][AKM8963_NST] " x)
+#define E(x...) printk(KERN_ERR "[COMP][AKM8963_NST] " x)
 
 #if AKM8963_DEBUG_DATA
 #define AKM_DATA(dev, ...) \
@@ -325,7 +325,7 @@ static int AKECS_GetData(
 
 static void AKECS_SetYPR(
 	struct akm8963_data *akm,
-	int *rbuf)
+	int32_t *rbuf)
 {
 	uint32_t ready;
 	AKM_DATA(&akm->i2c->dev, "AKM8963 %s: flag =0x%X", __func__,
@@ -336,6 +336,8 @@ static void AKECS_SetYPR(
 		rbuf[5], rbuf[6], rbuf[7], rbuf[8]);
 	AKM_DATA(&akm->input->dev, "  Orientation[YPR] : %6d,%6d,%6d",
 		rbuf[9], rbuf[10], rbuf[11]);
+	AKM_DATA(&akm->input->dev, "  Rotation V  : %6d,%6d,%6d,%6d",
+		rbuf[18], rbuf[19], rbuf[20], rbuf[21]);
 
 	
 	if (!rbuf[0]) {
@@ -360,13 +362,30 @@ static void AKECS_SetYPR(
 		input_report_abs(akm->input, ABS_RY, rbuf[6]);
 		input_report_abs(akm->input, ABS_RZ, rbuf[7]);
 		input_report_abs(akm->input, ABS_RUDDER, rbuf[8]);
+
+		
+		
+		input_report_abs(akm->input, ABS_GAS,   rbuf[12]);
+		input_report_abs(akm->input, ABS_BRAKE, rbuf[13]);
+		input_report_abs(akm->input, ABS_HAT2X, rbuf[14]);
+		input_report_abs(akm->input, ABS_HAT2Y, rbuf[15]);
+		input_report_abs(akm->input, ABS_HAT3X, rbuf[16]);
+		input_report_abs(akm->input, ABS_HAT3Y, rbuf[17]);
+		
 	}
 	
 	if (ready & ORI_DATA_READY) {
+		
 		input_report_abs(akm->input, ABS_HAT0X, rbuf[9]);
 		input_report_abs(akm->input, ABS_HAT0Y, rbuf[10]);
 		input_report_abs(akm->input, ABS_HAT1X, rbuf[11]);
 		input_report_abs(akm->input, ABS_HAT1Y, rbuf[4]);
+
+		
+		input_report_abs(akm->input, ABS_TILT_X, rbuf[18]);
+		input_report_abs(akm->input, ABS_TILT_Y, rbuf[19]);
+		input_report_abs(akm->input, ABS_TOOL_WIDTH, rbuf[20]);
+		input_report_abs(akm->input, ABS_VOLUME, rbuf[21]);
 	}
 
 	input_sync(akm->input);
@@ -1187,7 +1206,29 @@ static int akm8963_input_init(
 			-5760, 5760, 0, 0);
 	input_set_abs_params(*input, ABS_HAT1Y,
 			0, 3, 0, 0);
+	
+	input_set_abs_params(*input, ABS_GAS,
+			-32768, 32767, 0, 0);
+	input_set_abs_params(*input, ABS_BRAKE,
+			-32768, 32767, 0, 0);
+	input_set_abs_params(*input, ABS_HAT2X,
+			-32768, 32767, 0, 0);
+	input_set_abs_params(*input, ABS_HAT2Y,
+			-32768, 32767, 0, 0);
+	input_set_abs_params(*input, ABS_HAT3X,
+			-32768, 32767, 0, 0);
+	input_set_abs_params(*input, ABS_HAT3Y,
+			-32768, 32767, 0, 0);
 
+	
+	input_set_abs_params(*input, ABS_TILT_X,
+			-16384, 16384, 0, 0);
+	input_set_abs_params(*input, ABS_TILT_Y,
+			-16384, 16384, 0, 0);
+	input_set_abs_params(*input, ABS_TOOL_WIDTH,
+			-16384, 16384, 0, 0);
+	input_set_abs_params(*input, ABS_VOLUME,
+			-16384, 16384, 0, 0);
 	
 	(*input)->name = "compass";
 
@@ -1255,7 +1296,7 @@ int akm8963_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	int i;
 
 	dev_dbg(&client->dev, "start probing.");
-	I("AKM8963 compass driver: probe.");
+	I("AKM8963 compass driver: probe with Magnetic Field Uncalibrated support!\n");
 
 	if (!i2c_check_functionality(client->adapter, I2C_FUNC_I2C)) {
 		dev_err(&client->dev, "%s: check_functionality failed.",
