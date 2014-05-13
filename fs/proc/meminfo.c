@@ -16,7 +16,6 @@
 #include "internal.h"
 #include <linux/ion.h>
 #include <linux/msm_kgsl.h>
-#include <htc_debug/stability/htc_report_meminfo.h>
 
 void __attribute__((weak)) arch_report_meminfo(struct seq_file *m)
 {
@@ -242,8 +241,6 @@ static int meminfo_proc_show(struct seq_file *m, void *v)
 	hugetlb_report_meminfo(m);
 
 	arch_report_meminfo(m);
-
-	report_meminfo(m, &i);
 
 	return 0;
 #undef K

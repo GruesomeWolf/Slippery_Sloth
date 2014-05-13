@@ -868,6 +868,9 @@ static struct htc_battery_platform_data htc_battery_pdev_data = {
 	.chg_limit_active_mask = HTC_BATT_CHG_LIMIT_BIT_TALK |
 								HTC_BATT_CHG_LIMIT_BIT_NAVI |
 								HTC_BATT_CHG_LIMIT_BIT_THRML,
+#ifdef CONFIG_DUTY_CYCLE_LIMIT
+	.chg_limit_timer_sub_mask = HTC_BATT_CHG_LIMIT_BIT_THRML,
+#endif
 	.critical_low_voltage_mv = 3200,
 	.critical_alarm_vol_ptr = critical_alarm_voltage_mv,
 	.critical_alarm_vol_cols = sizeof(critical_alarm_voltage_mv) / sizeof(int),
@@ -2397,29 +2400,6 @@ static struct kobj_attribute himax_virtual_keys_attr = {
 };
 
 #endif
-
-static struct synaptics_virtual_key m7_vk_data[] = {
-	{
-		.index = 1,
-		.keycode = KEY_BACK,
-		.x_range_min = 300,
-		.x_range_max = 400,
-		.y_range_min = 2880,
-		.y_range_max = 2920,
-	},
-	{
-		.index = 2,
-		.keycode = KEY_HOME,
-		.x_range_min = 720,
-		.x_range_max = 900,
-		.y_range_min = 2880,
-		.y_range_max = 2920,
-	},
-	{
-		.index = 0,
-	},
-};
-
 static DEFINE_MUTEX(tp_lock);
 static struct regulator *tp_reg_l15;
 static int synaptics_power_LPM(int on)
@@ -2468,6 +2448,28 @@ static int synaptics_power_LPM(int on)
 	mutex_unlock(&tp_lock);
 	return rc;
 }
+
+static struct synaptics_virtual_key m7_vk_data[] = {
+	{
+		.index = 1,
+		.keycode = KEY_BACK,
+		.x_range_min = 300,
+		.x_range_max = 400,
+		.y_range_min = 2880,
+		.y_range_max = 2920,
+	},
+	{
+		.index = 2,
+		.keycode = KEY_HOME,
+		.x_range_min = 720,
+		.x_range_max = 900,
+		.y_range_min = 2880,
+		.y_range_max = 2920,
+	},
+	{
+		.index = 0,
+	},
+};
 
 static struct synaptics_i2c_rmi_platform_data syn_ts_3k_data[] = { 
 	{

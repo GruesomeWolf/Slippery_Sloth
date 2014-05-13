@@ -1108,6 +1108,12 @@ config HTC_ONMODE_CHARGING
 	help
 		support on mode charing icon
 
+config DUTY_CYCLE_LIMIT
+	bool "Duty cycle limit charging support"
+	default n
+	help
+		support on duty cycle limit charging
+
 config BUILD_EDIAG
         bool "Build in embedded diag fixes"
         default n
@@ -1628,6 +1634,13 @@ config MSM_RPCSERVER_WATCHDOG
 	bool "Watchdog RPC server"
 	help
 	  The dog_keepalive server handles watchdog events.
+
+config FORCE_FAST_CHARGE
+	bool "Force AC charge mode at will"
+	default y
+	help
+	  A simple sysfs interface to force adapters that
+	  are detected as USB to charge as AC.
 
 config MSM_RPC_WATCHDOG
 	depends on MSM_ONCRPCROUTER
@@ -2788,13 +2801,6 @@ config GPU_OC
 	default n
         help
          To add support for overclocked gpu.
-
-config FORCE_FAST_CHARGE
-	bool "Force AC charge mode at will"
-	default y
-	help
-	  A simple sysfs interface to force adapters that
-	  are detected as USB to charge as AC.
 
 config SENSE_4_PLUS
 	bool "SENSE 4 PLUS"
